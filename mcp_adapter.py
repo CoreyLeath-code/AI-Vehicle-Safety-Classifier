@@ -1,47 +1,33 @@
-import json
-from typing import Dict, Any
+"""Validated adapter between HTTP tool calls and domain scoring."""
 
-# Import your existing classifier logic
+from __future__ import annotations
+
+from typing import Any
+
 from predict import classify_driving_conditions
 
+_REQUIRED_FIELDS = ("weather", "visibility", "traffic", "driver_state")
 
-def classify_conditions(input_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Wraps the Vehicle Safety Classifier logic in MCP-compatible format.
-    """
-    weather = input_data.get("weather")
-    visibility = input_data.get("visibility")
-    traffic = input_data.get("traffic")
-    driver_state = input_data.get("driver_state")
 
-    # Call your existing model (predict.py should have this logic)
+def classify_conditions(input_data: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(input_data, dict):
+        raise ValueError("input must be a JSON object")
+    missing = [field for field in _REQUIRED_FIELDS if field not in input_data]
+    unknown = sorted(set(input_data) - set(_REQUIRED_FIELDS))
+    if missing:
+        raise ValueError(f"missing required fields: {', '.join(missing)}")
+    if unknown:
+        raise ValueError(f"unknown fields: {', '.join(unknown)}")
     score, risk, explanation = classify_driving_conditions(
-        weather, visibility, traffic, driver_state
+        input_data["weather"],
+        input_data["visibility"],
+        input_data["traffic"],
+        input_data["driver_state"],
     )
-
-    return {
-        "safety_score": score,
-        "risk_level": risk,
-        "explanation": explanation
-    }
+    return {"safety_score": score, "risk_level": risk, "explanation": explanation}
 
 
-# Dispatcher to handle different MCP tool calls
-def handle_mcp_request(tool_name: str, input_payload: Dict[str, Any]) -> Dict[str, Any]:
-    if tool_name == "classify_conditions":
-        return classify_conditions(input_payload)
-    else:
-        return {"error": f"Unknown tool: {tool_name}"}
-
-
-if __name__ == "__main__":
-    # Example standalone test
-    test_payload = {
-        "weather": "rain",
-        "visibility": "low",
-        "traffic": "heavy",
-        "driver_state": "drowsy"
-    }
-
-    result = handle_mcp_request("classify_conditions", test_payload)
-    print(json.dumps(result, indent=2))
+def handle_mcp_request(tool_name: str, input_payload: dict[str, Any]) -> dict[str, Any]:
+    if tool_name != "classify_conditions":
+        raise ValueError(f"unknown tool: {tool_name}")
+    return classify_conditions(input_payload)
