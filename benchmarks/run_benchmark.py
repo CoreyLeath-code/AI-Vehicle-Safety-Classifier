@@ -7,12 +7,16 @@ import hashlib
 import json
 import platform
 import statistics
+import sys
 import time
 import tracemalloc
 from datetime import UTC, datetime
 from pathlib import Path
 
-from n8n_webhook import app
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from n8n_webhook import app  # noqa: E402
 
 SCHEMA_VERSION = "1.0.0"
 PAYLOAD = {
