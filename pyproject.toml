@@ -13,3 +13,11 @@ ignore = ["S101"]
 
 [tool.bandit]
 exclude_dirs = ["tests", "benchmarks"]
+
+[tool.coverage.report]
+exclude_also = [
+  "if __name__ == .__main__.:",
+  "def load_best_model",
+  "def preprocess_image",
+  "def predict_image",
+]
