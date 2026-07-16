@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from n8n_webhook import app  # noqa: E402
+from n8n_webhook import app, limiter  # noqa: E402
 
 SCHEMA_VERSION = "1.0.0"
 PAYLOAD = {
@@ -36,6 +36,7 @@ def percentile(values: list[float], fraction: float) -> float:
 
 
 def run(iterations: int, warmup: int) -> dict:
+    limiter.enabled = False
     client = app.test_client()
     for _ in range(warmup):
         client.post("/n8n/classify", json=PAYLOAD)
