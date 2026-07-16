@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehicle-safety-classifier
+spec:
+  type: ClusterIP
+  selector:
+    app: vehicle-safety-classifier
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle-safety-classifier
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: vehicle-safety-classifier
+  template:
+    metadata:
+      labels:
+        app: vehicle-safety-classifier
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/coreyleath-code/ai-vehicle-safety-classifier:1.0.0
+          ports:
+            - name: http
+              containerPort: 5000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          startupProbe:
+            httpGet: {path: /live, port: http}
+            failureThreshold: 12
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /live, port: http}
+          readinessProbe:
+            httpGet: {path: /ready, port: http}

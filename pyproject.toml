@@ -1,0 +1,23 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers --cov=predict --cov=mcp_adapter --cov=n8n_webhook --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=90"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "benchmarks"]
+
+[tool.coverage.report]
+exclude_also = [
+  "if __name__ == .__main__.:",
+  "def load_best_model",
+  "def preprocess_image",
+  "def predict_image",
+]

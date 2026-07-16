@@ -1,224 +1,127 @@
-🚗 AI Vehicle Safety Classifier  
-### Real-Time Safety Detection using Deep Learning (CNN)
+# AI Vehicle Safety Classifier
 
-<div align="center">
+[![CI](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/ci.yml/badge.svg)](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/ci.yml)
+[![Security](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/security.yml/badge.svg)](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/security.yml)
+![Coverage gate](https://img.shields.io/badge/core%20coverage-%E2%89%A590%25-success)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![Container](https://img.shields.io/badge/container-non--root%20%7C%20read--only-2496ED?logo=docker&logoColor=white)
+![SBOM](https://img.shields.io/badge/SBOM-SPDX-blue)
+![Deployment](https://img.shields.io/badge/deployment%20gates-9%20tiers-success)
+[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
-![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)
-![Python](https://img.shields.io/badge/Python-3.10-blue)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-orange)
-![MLflow](https://img.shields.io/badge/MLflow-Enabled-blueviolet)
-![CUDA](https://img.shields.io/badge/CUDA-11.8-success)
-![Research](https://img.shields.io/badge/Research-Ready-red)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow)
+An interpretable vehicle-condition risk service with a separate CNN research pipeline. The
+production-serving path validates weather, visibility, traffic, and driver state, then returns a
+deterministic 0–100 safety score, risk level, and explanation. The CNN path is intentionally kept
+offline until a versioned dataset and signed model artifact are available.
 
-</div>
+> This project is decision-support research, not a certified automotive safety system.
 
+## Verifiable metrics dashboard
 
-Project Summary
+| Metric | Current source of truth | Acceptance |
+|---|---|---:|
+| Core branch coverage | CI `coverage.xml` artifact | >= 90% |
+| CI status | live badge and workflow run | all required jobs pass |
+| Benchmark date/runtime | `benchmarks/latest.json` provenance | generated for current commit |
+| Average/median/p95/p99/min/max latency | benchmark JSON | measured, hardware-sensitive |
+| Throughput and success rate | benchmark JSON | success rate = 100% |
+| Peak Python memory | benchmark JSON | measured, not universal |
+| Security findings | CodeQL, Bandit, pip-audit, Trivy | 0 blocking findings |
+| Dependency/license inventory | `benchmarks/licenses.json` | artifact produced |
+| Docker image and startup | deployment-validation job | build and health/API smoke pass |
+| SBOM | `security-evidence` artifact | SPDX JSON produced |
+| Repository size/LOC/open issues/releases | GitHub repository metadata | inspect live; not hard-coded |
+| CNN accuracy/precision/recall/F1/ROC-AUC | unavailable | requires versioned labeled dataset |
+| Training/GPU/loss/confusion matrix | unavailable | requires reproducible model run |
 
-The **AI Vehicle Safety Classifier** is a convolutional neural network (CNN) designed to classify driving conditions as:
+Numerical benchmark values are not copied into this README because runner hardware and dependency
+updates change them. Every CI run attaches the exact measurement document to its commit.
 
-- **Safe Driving**
-- **Unsafe Driving**
+## Research protocol
 
-This project is built for **driver monitoring**, **fleet analytics**, **insurance risk modeling**, and **vehicle safety research**.  
-The repository includes full **research-grade documentation**, **metrics**, **ablation studies**, and **reproducibility artifacts**.
-
-
-
- Features
-
-### ✅ Deep Learning CNN (3-block architecture)  
-### ✅ BatchNorm + Dropout for robust learning  
-### ✅ Full research suite:  
-- [Metrics](metrics.md)  
-- [Ablation Study](ablation_study.md)  
-- [Model Card](model_card.md)  
-- [Benchmark](benchmark.md)  
-- [Dataset Stats](dataset_stats.md)  
-- [Reproducibility](reproducibility.md)  
-
-### ✅ Industry-ready file structure  
-### ✅ Scalable for video-based models  
-### ✅ Extendable to real-time inference with TensorRT  
-
-
-
- Model Architecture Overview
-
-Input (128×128×3) ↓ Conv2D → ReLU → BatchNorm → MaxPool ↓ Conv2D → ReLU → BatchNorm → MaxPool ↓ Conv2D → ReLU → BatchNorm → MaxPool ↓ Flatten ↓ Dropout(0.3) ↓ Dense Layer (Softmax)
-
-
-
-Research Metrics (Highlights)
-
-From **metrics.md**:
-
-| Metric | Score |
-|--------|--------|
-| Accuracy | **0.927** |
-| Precision | **0.914** |
-| Recall | **0.901** |
-| F1 Score | **0.907** |
-| ROC-AUC | **0.958** |
-
-→ Full details: See [metrics.md](metrics.md)
-
-
-
-Ablation Study (Highlights)
-
-From **ablation_study.md**:
-
-| Variant | F1 Score |
-|---------|-----------|
-| Full Model | **0.907** |
-| No Dropout | 0.884 |
-| No BatchNorm | 0.861 |
-| Smaller CNN | 0.832 |
-| SGD Optimizer | 0.789 |
-
-### ✔ BatchNorm and Dropout are critical  
-### ✔ Depth strongly influences performance  
-
-Full study: [ablation_study.md](ablation_study.md)
-
-
- Benchmark Comparison
-
-From **benchmark.md**:
-
-| Model | F1 Score |
-|-------|-----------|
-| Logistic Regression | 0.748 |
-| Random Forest | 0.819 |
-| XGBoost | 0.865 |
-| **CNN Classifier** | **0.907** |
-
-→ CNN beats all classical baselines.
-
-Full comparison: [benchmark.md](benchmark.md)
-
-
-
-# 📁 Repository Structure
-
-AI-Vehicle-Safety-Classifier/ │ ├── train.py ├── predict.py ├── dataset/ ├── images/ │   ├── loss_curve.png │   ├── accuracy_curve.png │   └── confusion_matrix.png │ ├── metrics.md ├── ablation_study.md ├── benchmark.md ├── model_card.md ├── dataset_stats.md ├── reproducibility.md │ └── README.md
-
-
-
- Installation
+The benchmark sends a fixed, hashed request through Flask's test client after warm-up. It reports
+average, median, p95, p99, minimum and maximum latency, requests/second, success rate, peak traced
+Python memory, parameters, payload SHA-256, Python version, platform, and UTC timestamp.
 
 ```bash
-git clone https://github.com/Trojan3877/AI-Vehicle-Safety-Classifier.git
-cd AI-Vehicle-Safety-Classifier
-pip install -r requirements.txt
+python -m venv .venv
+# Linux/macOS: source .venv/bin/activate
+# Windows: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+pytest
+python benchmarks/run_benchmark.py --output benchmarks/latest.json
 ```
 
+This measures application overhead without network/TLS effects. It does not establish 1–10,000
+concurrent-user capacity or CNN model quality. See [the performance guide](docs/PERFORMANCE.md).
 
-
-🚀 Local Run
+## API
 
 ```bash
-# Copy the environment variable template and edit as needed
-cp .env.example .env
+gunicorn --bind 127.0.0.1:5000 n8n_webhook:app
 
-# Start the webhook server
-python n8n_webhook.py
-# Server listens on http://0.0.0.0:5000
-
-# Health check
-curl http://localhost:5000/health
-# → {"status": "ok"}
-
-# Classify driving conditions
-curl -X POST http://localhost:5000/n8n/classify \
-  -H "Content-Type: application/json" \
+curl http://127.0.0.1:5000/health
+curl http://127.0.0.1:5000/metrics
+curl -X POST http://127.0.0.1:5000/n8n/classify \
+  -H "content-type: application/json" \
   -d '{"tool":"classify_conditions","input":{"weather":"rain","visibility":"low","traffic":"heavy","driver_state":"drowsy"}}'
 ```
 
+Accepted values:
 
+| Field | Values |
+|---|---|
+| weather | clear, sunny, rain, snow, fog |
+| visibility | high, medium, low |
+| traffic | light, moderate, heavy |
+| driver_state | alert, distracted, drowsy |
 
-🐳 Docker
+Unknown, missing, or extra fields fail closed with HTTP 422. Payloads are size-limited, requests are
+rate-limited, errors are sanitized, and request count/latency histograms are exposed for Prometheus.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  C[Client] --> G[Gateway TLS and identity]
+  G --> A[Flask API]
+  A --> V[Strict validation]
+  V --> R[Deterministic risk engine]
+  R --> J[Score risk explanation]
+  A --> M[Prometheus metrics]
+  D[Versioned labeled images] --> T[Offline CNN training]
+  T --> E[Evaluation and signed artifact]
+```
+
+The separation keeps the deployed service small and independently reproducible. Read the
+[architecture](docs/ARCHITECTURE.md) and [audit](docs/AUDIT.md) for trade-offs and residual risks.
+
+## Deployment
 
 ```bash
-# Build the image
-docker build -t ai-vehicle-safety-classifier .
-
-# Run the container
-docker run -p 5000:5000 ai-vehicle-safety-classifier
-
-# Run with a custom port
-docker run -e PORT=8080 -p 8080:8080 ai-vehicle-safety-classifier
+docker compose up --build
+kubectl apply -f network-policy.yaml -f deployment.yaml -f service.yaml
 ```
 
+The image runs as UID 10001. Kubernetes enforces non-root execution, a read-only filesystem,
+dropped capabilities, RuntimeDefault seccomp, resource limits, disabled service-account token,
+startup/liveness/readiness probes, immutable version tags, and default-deny networking.
 
+Nine promotion tiers cover formatting, linting, static analysis, unit tests, integration/API tests,
+coverage, security, reproducible performance, and production deployment validation. See the
+[deployment guide](docs/DEPLOYMENT.md) and [production checklist](docs/PRODUCTION_CHECKLIST.md).
 
-☁️ Cloud Deployment (Render / Heroku)
+## Documentation
 
-A `Procfile` is included for Heroku and Render:
+- [Full repository audit](docs/AUDIT.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Benchmark report](benchmarks/benchmark_report.md)
+- [Performance guide](docs/PERFORMANCE.md)
+- [Deployment and rollback](docs/DEPLOYMENT.md)
+- [Security policy](SECURITY.md)
+- [Contributing guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
-```
-web: python n8n_webhook.py
-```
+## License
 
-**Environment variables to configure:**
-
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `5000` | Port the server listens on |
-
-Copy `.env.example` to `.env` and fill in your values before deploying.
-
-
-
-🧪 Training
-
-```bash
-python train.py --epochs 20 --seed 42
-```
-
-
-
- Future Improvements
-
-Integrate YOLO/RetinaNet for hazard region detection
-
-Add sequence modeling (LSTM / 3D-CNN) for video frames
-
-Use TensorRT for real-time inference
-
-Add uncertainty estimation for safety-critical AI
-
-Design Questions & Reflections
-Q: What problem does this project aim to solve?
-A: This project aims to explore how machine learning can be combined with deterministic logic to assess safety in simulated vehicle scenarios, focusing on building a system that balances predictive performance with clarity and real-world constraints.
-Q: Why did I choose this hybrid ML + rule-based approach instead of a pure model?
-A: I chose a hybrid approach because safety-critical systems often need clear, interpretable rules alongside learned patterns. A pure ML model might pick up correlations that don’t hold in rare but dangerous edge cases, whereas combining learned behavior with defined safety rules helps ground decisions in understandable logic.
-Q: What were the main trade-offs I made?
-A: The main trade-off was between complexity and interpretability. A fully learned model might achieve slightly higher accuracy, but at the cost of making behavior harder to predict and trust. By integrating rule-based logic, I accepted some reduction in raw performance in exchange for improved explainability and consistent safety handling.
-Q: What didn’t work as expected?
-A: Initially, the learned component sometimes overfitted to specific scenarios in the training data and didn’t generalize well to simulated edge cases. This helped me realize that data diversity and evaluation strategy are just as important as model choice, especially for safety-related tasks.
-Q: What did I learn from building this project?
-A: I learned that engineering judgment — deciding where to rely on logic versus learned components — is often as critical as the model itself. I also gained a deeper appreciation for careful evaluation and testing, particularly in contexts where incorrect outputs carry higher consequences.
-Q: If I had more time or resources, what would I improve next?
-A: I would build stronger validation and stress-testing frameworks to simulate a wider range of edge cases, and explore uncertainty quantification techniques so the system could better express when it’s unsure rather than making overconfident predictions.
-
-
-
-
-
-Corey Leath
-GitHub: https://github.com/Trojan3877
-LinkedIn: https://www.linkedin.com/in/corey-leath
-Email: corey22blue@hotmail.com
-
-
-
-
-📜 License
-
-This project is licensed under the MIT License.
-
-
-
+MIT. See [LICENSE](LICENSE).

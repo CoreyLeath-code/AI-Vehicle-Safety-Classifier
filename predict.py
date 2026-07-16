@@ -1,164 +1,111 @@
-"""
-AI Vehicle Safety Classifier — Inference (Prediction) Module
-Author: Corey Leath (Trojan3877)
-L5/L6 Production-Ready Architecture
+"""Deterministic vehicle-condition scoring and optional CNN image inference."""
 
-Handles:
-✔ Loading best saved model
-✔ Preprocessing input image
-✔ Predicting safety class
-✔ JSON-style output
-✔ Reusable for FastAPI / Streamlit / Flask
-"""
+from __future__ import annotations
 
 import os
+from pathlib import Path
+from typing import Final
+
 import yaml
 
-# ---------------------------------------------------------------------
-# Penalty tables for rule-based driving-condition classifier
-# ---------------------------------------------------------------------
-# Unknown/unrecognised inputs receive a moderate default penalty.
-_WEATHER_PENALTY = {"clear": 0, "sunny": 0, "rain": 20, "snow": 25, "fog": 30}
-_VISIBILITY_PENALTY = {"high": 0, "medium": 15, "low": 30}
-_TRAFFIC_PENALTY = {"light": 0, "moderate": 10, "heavy": 20}
-_DRIVER_PENALTY = {"alert": 0, "distracted": 20, "drowsy": 30}
-
-# Fallback penalty for unrecognised values in each category
-_DEFAULT_WEATHER_PENALTY = 15
-_DEFAULT_VISIBILITY_PENALTY = 15
-_DEFAULT_TRAFFIC_PENALTY = 10
-_DEFAULT_DRIVER_PENALTY = 15
+_WEATHER_PENALTY: Final = {"clear": 0, "sunny": 0, "rain": 20, "snow": 25, "fog": 30}
+_VISIBILITY_PENALTY: Final = {"high": 0, "medium": 15, "low": 30}
+_TRAFFIC_PENALTY: Final = {"light": 0, "moderate": 10, "heavy": 20}
+_DRIVER_PENALTY: Final = {"alert": 0, "distracted": 20, "drowsy": 30}
 
 
-# ---------------------------------------------------------------------
-# Load config
-# ---------------------------------------------------------------------
-def load_config(config_path="config/config.yaml"):
-    with open(config_path, "r") as f:
-        return yaml.safe_load(f)
+def load_config(config_path: str = "config/config.yaml") -> dict:
+    """Load a non-empty YAML mapping."""
+    with Path(config_path).open(encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+    if not isinstance(config, dict):
+        raise ValueError("configuration must be a YAML mapping")
+    return config
 
 
-# ---------------------------------------------------------------------
-# Load best model
-# ---------------------------------------------------------------------
-def load_best_model(config_path="config/config.yaml"):
+def load_best_model(config_path: str = "config/config.yaml"):
+    """Load the trained TensorFlow artifact lazily."""
     import tensorflow as tf
-    config = load_config(config_path)
-    model_path = os.path.join(config["paths"]["model_dir"], "best_model.keras")
+
+    model_dir = load_config(config_path)["paths"]["model_dir"]
+    model_path = Path(model_dir) / "best_model.keras"
+    if not model_path.is_file():
+        raise FileNotFoundError(f"model artifact not found: {model_path}")
     return tf.keras.models.load_model(model_path)
 
 
-# ---------------------------------------------------------------------
-# Preprocess image to model-ready tensor
-# ---------------------------------------------------------------------
-def preprocess_image(img_path, config_path="config/config.yaml"):
+def preprocess_image(img_path: str, config_path: str = "config/config.yaml"):
+    """Decode, normalize, and batch one image."""
     import numpy as np
     from tensorflow.keras.preprocessing import image
 
-    config = load_config(config_path)
-    target_size = tuple(config["model"]["input_shape"][:2])
-
-    img = image.load_img(img_path, target_size=target_size)
-    img_array = image.img_to_array(img)
-
-    # Normalize
-    img_array = img_array / 255.0
-
-    # Add batch dimension
-    img_array = np.expand_dims(img_array, axis=0)
-
-    return img_array
+    target = tuple(load_config(config_path)["model"]["input_shape"][:2])
+    source = Path(img_path)
+    if not source.is_file():
+        raise FileNotFoundError(f"input image not found: {source}")
+    img = image.load_img(source, target_size=target)
+    return np.expand_dims(image.img_to_array(img) / 255.0, axis=0)
 
 
-# ---------------------------------------------------------------------
-# Predict class from image path
-# ---------------------------------------------------------------------
-def predict_image(img_path, config_path="config/config.yaml"):
+def predict_image(img_path: str, config_path: str = "config/config.yaml") -> dict:
+    """Return the class and confidence for an image."""
     import numpy as np
 
-    # Load model and config
     model = load_best_model(config_path)
     config = load_config(config_path)
+    predictions = model.predict(preprocess_image(img_path, config_path), verbose=0)
+    index = int(np.argmax(predictions, axis=1)[0])
+    confidence = float(predictions[0][index])
 
-    # Preprocess input
-    img_array = preprocess_image(img_path, config_path)
-
-    # Predict probabilities
-    preds = model.predict(img_array)
-    pred_index = np.argmax(preds, axis=1)[0]
-    confidence = preds[0][pred_index]
-
-    # Load label map
-    label_map_path = os.path.join(config["paths"]["model_dir"], "label_mapping.txt")
-    label_map = {}
-
-    with open(label_map_path, "r") as f:
-        for line in f:
-            idx, label = line.strip().split(": ")
-            label_map[int(idx)] = label
-
-    predicted_label = label_map[pred_index]
-
-    # JSON-style output
-    result = {
-        "predicted_class": predicted_label,
-        "confidence": float(confidence)
-    }
-
-    return result
+    mapping_path = Path(config["paths"]["model_dir"]) / "label_mapping.txt"
+    labels = {}
+    with mapping_path.open(encoding="utf-8") as stream:
+        for line in stream:
+            raw_index, label = line.strip().split(": ", maxsplit=1)
+            labels[int(raw_index)] = label
+    if index not in labels:
+        raise ValueError(f"label mapping is missing class index {index}")
+    return {"predicted_class": labels[index], "confidence": confidence}
 
 
-# ---------------------------------------------------------------------
-# Rule-based driving condition classifier
-# ---------------------------------------------------------------------
-def classify_driving_conditions(weather: str, visibility: str, traffic: str, driver_state: str):
-    """
-    Classify driving conditions based on environmental and driver inputs.
+def _validated(value: str, field: str, options: dict[str, int]) -> str:
+    normalized = str(value).strip().lower()
+    if normalized not in options:
+        allowed = ", ".join(sorted(options))
+        raise ValueError(f"{field} must be one of: {allowed}")
+    return normalized
 
-    Args:
-        weather: One of "clear", "rain", "snow", "fog", or similar.
-        visibility: One of "high", "medium", "low".
-        traffic: One of "light", "moderate", "heavy".
-        driver_state: One of "alert", "distracted", "drowsy".
 
-    Returns:
-        Tuple of (safety_score: int, risk_level: str, explanation: str)
-        where safety_score is 0–100, risk_level is "low"/"medium"/"high".
-    """
+def classify_driving_conditions(
+    weather: str,
+    visibility: str,
+    traffic: str,
+    driver_state: str,
+) -> tuple[int, str, str]:
+    """Score a validated scenario on a deterministic 0–100 safety scale."""
+    weather = _validated(weather, "weather", _WEATHER_PENALTY)
+    visibility = _validated(visibility, "visibility", _VISIBILITY_PENALTY)
+    traffic = _validated(traffic, "traffic", _TRAFFIC_PENALTY)
+    driver_state = _validated(driver_state, "driver_state", _DRIVER_PENALTY)
     penalty = (
-        _WEATHER_PENALTY.get(str(weather).lower(), _DEFAULT_WEATHER_PENALTY)
-        + _VISIBILITY_PENALTY.get(str(visibility).lower(), _DEFAULT_VISIBILITY_PENALTY)
-        + _TRAFFIC_PENALTY.get(str(traffic).lower(), _DEFAULT_TRAFFIC_PENALTY)
-        + _DRIVER_PENALTY.get(str(driver_state).lower(), _DEFAULT_DRIVER_PENALTY)
+        _WEATHER_PENALTY[weather]
+        + _VISIBILITY_PENALTY[visibility]
+        + _TRAFFIC_PENALTY[traffic]
+        + _DRIVER_PENALTY[driver_state]
     )
-
     score = max(0, 100 - penalty)
-
     if score >= 70:
-        risk_level = "low"
-        explanation = "Driving conditions are safe. No major risk factors detected."
-    elif score >= 40:
-        risk_level = "medium"
-        explanation = "Moderate risk detected. Exercise caution while driving."
-    else:
-        risk_level = "high"
-        explanation = "High risk conditions detected. Driving is not recommended."
-
-    return score, risk_level, explanation
+        return score, "low", "Driving conditions are safe. No major risk factors detected."
+    if score >= 40:
+        return score, "medium", "Moderate risk detected. Exercise caution while driving."
+    return score, "high", "High risk conditions detected. Driving is not recommended."
 
 
-# ---------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Predict image using Vehicle Safety Classifier")
-    parser.add_argument("image_path", help="Path to the input image")
-    parser.add_argument("--config", default="config/config.yaml", help="Path to config.yaml")
+    parser = argparse.ArgumentParser(description="Predict vehicle safety from an image")
+    parser.add_argument("image_path")
+    parser.add_argument("--config", default=os.getenv("CONFIG_PATH", "config/config.yaml"))
     args = parser.parse_args()
-
-    output = predict_image(args.image_path, args.config)
-    
-    print("\nPrediction Result:")
-    print(output)
+    print(predict_image(args.image_path, args.config))
