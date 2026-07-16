@@ -39,7 +39,7 @@ jobs:
         run: python benchmarks/run_benchmark.py --iterations 1000 --warmup 50 --output benchmarks/latest.json
       - name: License inventory
         run: pip-licenses --format=json --output-file=benchmarks/licenses.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: quality-evidence
           path: |
