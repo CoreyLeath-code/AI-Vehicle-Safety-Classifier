@@ -16,7 +16,7 @@ pyyaml==6.0.1
 # Testing & Code Quality
 pytest==8.1.1
 flake8==7.0.0
-black==26.3.1
+black==26.5.1
 mypy==1.9.0
 
 # API / Deployment (optional)
