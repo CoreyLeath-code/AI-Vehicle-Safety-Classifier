@@ -1,5 +1,5 @@
 # Core Scientific Libraries
-numpy==1.26.4
+numpy==2.5.1
 pandas==2.2.2
 scikit-learn==1.4.2
 opencv-python==4.9.0.80
