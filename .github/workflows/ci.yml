@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
@@ -39,7 +39,7 @@ jobs:
         run: python benchmarks/run_benchmark.py --iterations 1000 --warmup 50 --output benchmarks/latest.json
       - name: License inventory
         run: pip-licenses --format=json --output-file=benchmarks/licenses.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: quality-evidence
           path: |
@@ -53,7 +53,7 @@ jobs:
     timeout-minutes: 15
     needs: quality
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker build -t vehicle-safety:${{ github.sha }} .
       - name: Verify container identity, startup, health and API
         run: |
