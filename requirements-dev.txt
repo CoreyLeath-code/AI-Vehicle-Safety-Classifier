@@ -4,4 +4,4 @@ pip-audit==2.10.1
 pytest==8.4.1
 pytest-cov==6.2.1
 ruff==0.12.3
-pip-licenses==5.0.0
+pip-licenses==5.5.5
