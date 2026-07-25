@@ -79,6 +79,35 @@ Accepted values:
 Unknown, missing, or extra fields fail closed with HTTP 422. Payloads are size-limited, requests are
 rate-limited, errors are sanitized, and request count/latency histograms are exposed for Prometheus.
 
+## Senior review follow-up: safety evaluation and reproducibility
+
+This section closes the documentation items tracked in [issue #26](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/issues/26). The repository deliberately does not claim CNN accuracy until a versioned labeled dataset and reproducible split are available.
+
+### Verification contract
+
+From a clean checkout:
+
+```bash
+python -m venv .venv
+# Linux/macOS: source .venv/bin/activate
+# Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
+pytest -q
+python benchmarks/run_benchmark.py --output benchmarks/latest.json
+python -m json.tool benchmarks/latest.json
+docker compose config --quiet
+```
+
+The canonical performance record is `benchmarks/latest.json`, including latency distribution, throughput, success rate, peak traced memory, runtime, and provenance. Coverage is accepted from the CI `coverage.xml` artifact at the repository's stated >=90% gate. Classification quality remains an explicit gap: report class support, precision, recall, F1, confusion matrix, split strategy, seed, and dataset version together before publishing a model-quality number.
+
+### Engineering decisions and failure modes
+
+- **Fail-closed behavior:** malformed requests and unavailable model state should produce a safe error, never a confident safety class.
+- **False negatives and false positives have different costs:** threshold selection must be reviewed against class imbalance and calibrated on representative road conditions; aggregate accuracy is insufficient.
+- **Latency vs. model complexity:** the benchmark protects the API path, but image size, cold-start time, and memory limits must be measured on the deployment target.
+- **Next production step:** add a signed, versioned evaluation dataset and a reviewable confusion-matrix artifact, then run hardware/container smoke tests and document the rollback model.
+
+
 ## Architecture
 
 ```mermaid
