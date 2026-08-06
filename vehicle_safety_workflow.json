@@ -5,60 +5,51 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "vehicle-safety",
+        "responseMode": "responseNode",
         "options": {}
       },
-      "id": "1",
+      "id": "webhook-trigger",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "typeVersion": 2,
+      "position": [
+        -280,
+        300
+      ]
     },
     {
       "parameters": {
-        "url": "http://localhost:5000/n8n/classify",
+        "url": "={{ $env.VEHICLE_SAFETY_API_BASE_URL + '/n8n/classify' }}",
         "method": "POST",
-        "authentication": "none",
-        "jsonParameters": true,
-        "options": {},
-        "bodyParametersJson": "={ \"tool\": \"classify_conditions\", \"input\": { \"weather\": $json[\"weather\"], \"visibility\": $json[\"visibility\"], \"traffic\": $json[\"traffic\"], \"driver_state\": $json[\"driver_state\"] } }"
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { tool: 'classify_conditions', input: { weather: $json.weather, visibility: $json.visibility, traffic: $json.traffic, driver_state: $json.driver_state } } }}",
+        "options": {
+          "timeout": 10000
+        }
       },
-      "id": "2",
-      "name": "Call MCP Classifier",
+      "id": "call-classifier",
+      "name": "Call configured classifier",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [500, 300]
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        300
+      ]
     },
     {
       "parameters": {
-        "channel": "alerts",
-        "text": "=Vehicle Safety Alert 🚨\\nScore: {{$json[\"safety_score\"]}}\\nRisk Level: {{$json[\"risk_level\"]}}\\nExplanation: {{$json[\"explanation\"]}}"
+        "respondWith": "firstIncomingItem",
+        "options": {}
       },
-      "id": "3",
-      "name": "Send Slack Alert",
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 1,
-      "position": [750, 200],
-      "credentials": {
-        "slackApi": "YOUR_SLACK_CREDENTIAL"
-      }
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "sheetId": "YOUR_SHEET_ID",
-        "range": "A:D",
-        "options": {},
-        "valueInputMode": "USER_ENTERED",
-        "data": "={{ [ $json[\"safety_score\"], $json[\"risk_level\"], $json[\"explanation\"], new Date().toISOString() ] }}"
-      },
-      "id": "4",
-      "name": "Log to Google Sheets",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 1,
-      "position": [750, 400],
-      "credentials": {
-        "googleSheetsOAuth2Api": "YOUR_GOOGLE_SHEETS_CREDENTIAL"
-      }
+      "id": "respond-webhook",
+      "name": "Return classification result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        300
+      ]
     }
   ],
   "connections": {
@@ -66,28 +57,28 @@
       "main": [
         [
           {
-            "node": "Call MCP Classifier",
+            "node": "Call configured classifier",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Call MCP Classifier": {
+    "Call configured classifier": {
       "main": [
         [
           {
-            "node": "Send Slack Alert",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Log to Google Sheets",
+            "node": "Return classification result",
             "type": "main",
             "index": 0
           }
         ]
       ]
     }
-  }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2"
 }
