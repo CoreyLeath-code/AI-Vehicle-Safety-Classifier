@@ -1,7 +1,7 @@
 """
 utils.py
 Shared utilities for the AI Vehicle Safety Classifier
-Author: Corey Leath (Trojan3877)
+Author: Corey Leath (CoreyLeath-code)
 L5/L6 Production-Ready Version
 """
 
