@@ -1,6 +1,6 @@
 """
 AI Vehicle Safety Classifier — Training Pipeline
-Author: Corey Leath (Trojan3877)
+Author: Corey Leath (CoreyLeath-code)
 L5/L6 Production-Ready Architecture
 
 Handles:
