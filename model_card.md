@@ -68,5 +68,5 @@ Environment and seeds stored in `reproducibility.md`.
 ---
 
 ## 9. Maintainer
-Corey Leath (Trojan3877)  
-GitHub: https://github.com/Trojan3877
+Corey Leath (CoreyLeath-code)  
+GitHub: https://github.com/CoreyLeath-code
