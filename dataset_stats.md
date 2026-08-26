@@ -1,31 +1,22 @@
-# 📊 Dataset Statistics — AI Vehicle Safety Classifier
+# Dataset Evidence Status — AI Vehicle Safety Classifier
 
-## Class Distribution
-- Safe: 740 images  
-- Unsafe: 520 images  
+The repository currently does **not** include a versioned redistributable labeled image dataset or immutable dataset manifest sufficient to verify class counts, environmental distributions, correlations, or train/validation/test proportions.
 
-**Conclusion:**  
-Slight class imbalance → handled with class weights.
+Accordingly, previous numeric dataset statistics have been removed from the evidence surface.
 
----
+## Required dataset manifest
 
-## Feature Characteristics
-- RGB images  
-- Resolution normalized to 128×128  
-- Motion blur present in ~11% of unsafe samples  
-- Night conditions present in <5% of data
+Before model-quality claims are published, add a machine-readable manifest containing:
 
----
+- dataset name, source, version, and license;
+- file/content hashes;
+- class definitions and per-class support;
+- capture/source provenance that can be legally documented;
+- image dimensions and preprocessing policy;
+- train/validation/test membership for every example;
+- split-generation seed and grouping strategy;
+- duplicate and near-duplicate leakage checks;
+- known missingness, imbalance, and sampling limitations;
+- subgroup/environment slices relevant to lighting, weather, camera/source, and other intended-domain factors.
 
-## Correlations
-- Unsafe conditions correlate strongly with blur + sharp steering angles  
-- Safe conditions correlate with centered lane position
-
----
-
-## Train/Val/Test Split
-- Train: 70%  
-- Validation: 15%  
-- Test: 15%  
-
-Random seed: 42
+Model metrics in `metrics.md` and `model_card.md` remain unavailable until this evidence exists.
