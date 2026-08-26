@@ -1,73 +1,40 @@
-# 🚗 AI Vehicle Safety Classifier — Research Metrics
+# AI Vehicle Safety Classifier — Evidence Register
 
-This file contains full evaluation metrics for the Vehicle Safety Classifier, including precision/recall, F1, confusion matrix, ROC-AUC, and threshold analysis.
+This file distinguishes reproducible engineering measurements from model-quality evidence that is not yet available.
 
----
+## Verified engineering evidence
 
-## 📊 Overall Performance
+Audited green `main` baseline: `49c6722be68bb7cc121e98f8304405d09c388530`.
 
-| Metric | Value |
-|--------|--------|
-| Accuracy | **0.927** |
-| Precision | **0.914** |
-| Recall | **0.901** |
-| F1 Score | **0.907** |
-| ROC-AUC | **0.958** |
+| Metric | Audited value | Protocol |
+|---|---:|---|
+| Tests | 19 passed | `pytest` on Python 3.11.16 |
+| Core branch coverage | 96.03% | `pytest-cov`; enforced gate >=90% |
+| Benchmark requests | 1,000 measured + 50 warm-up | Flask in-process test client |
+| Success rate | 100% | Non-200 responses fail benchmark |
+| Median latency | 1.0764 ms | Fixed hashed request payload |
+| Average latency | 1.0951 ms | Fixed hashed request payload |
+| p95 latency | 1.1803 ms | Fixed hashed request payload |
+| p99 latency | 1.4806 ms | Fixed hashed request payload |
+| Throughput | 909.74 requests/s | Single-process in-process benchmark |
+| Peak traced Python memory | 376,893 bytes | `tracemalloc` during measured loop |
+| Runtime dependency audit | No known vulnerabilities found | `pip-audit -r requirements-runtime.txt` |
 
----
+These results are hardware/runtime sensitive. They do not establish production concurrency, network latency, or CNN inference performance.
 
-## 🧪 Class-Level Metrics
+## CNN model-quality evidence
 
-| Class | Precision | Recall | F1 Score | Support |
-|-------|-----------|--------|----------|---------|
-| Safe Driving | 0.942 | 0.915 | 0.928 | 740 |
-| Unsafe Driving | 0.887 | 0.882 | 0.884 | 520 |
+The repository does not currently contain a redistributable versioned labeled dataset and signed trained model artifact sufficient to reproduce model-quality numbers. Therefore the following are intentionally **not claimed**:
 
----
+- accuracy;
+- precision;
+- recall;
+- F1;
+- ROC-AUC;
+- confusion matrix;
+- threshold/calibration quality;
+- subgroup performance;
+- ablation deltas;
+- training loss or GPU throughput.
 
-## 🚦 Confusion Matrix
-[[678   62] [ 61  459]]
-Interpretation:
-
-- 678 safe driving samples correctly classified  
-- 61 unsafe samples were misclassified → *improvement opportunity*  
-- Class balance is acceptable  
-
----
-
-## 📈 Threshold Analysis
-
-| Decision Threshold | Precision | Recall | F1 Score |
-|--------------------|-----------|--------|----------|
-| 0.30 | 0.865 | 0.951 | 0.906 |
-| 0.50 (default) | 0.914 | 0.901 | 0.907 |
-| 0.70 | 0.955 | 0.812 | 0.877 |
-
-**Conclusion:**  
-A threshold of **0.50** offers the most balanced tradeoff between detecting unsafe conditions vs minimizing false positives.
-
----
-
-## 📉 Training Curves
-
-Include these PNGs in `/images`:
-
-- `loss_curve.png`  
-- `accuracy_curve.png`  
-- `confusion_matrix.png`
-
-I can generate **matplotlib code** for these plots if you want them.
-
----
-
-## 🔧 Evaluation Environment
-
-- Python 3.10  
-- Scikit-learn 1.4  
-- TensorFlow 2.15 / PyTorch optional  
-- Numpy 1.26  
-- GPU accel: optional  
-
-Reproducibility seed: `42`
-
----
+A future model evaluation must record dataset identity/license, split strategy, leakage checks, seeds, dependency versions, training config, model digest, class support, uncertainty, and the exact command/commit used to generate every number.
