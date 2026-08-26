@@ -1,36 +1,30 @@
-# 🧪 Ablation Study — AI Vehicle Safety Classifier
+# CNN Ablation Study — Reproducibility Contract
 
-The purpose of this ablation study is to analyze how each model component contributes to overall performance.
+No CNN ablation result is currently considered verified in this repository because there is no immutable labeled dataset manifest and versioned trained-artifact set from which to regenerate the reported variants.
 
----
+## Planned variants
 
-## 🧩 Model Variants Tested
+A future controlled study may compare:
 
-| Variant | Description | F1 Score |
-|---------|-------------|-----------|
-| **Full Model (baseline)** | CNN + BatchNorm + Dropout + Adam | **0.907** |
-| No Dropout | Removed dropout layer | 0.884 |
-| No BatchNorm | Removed batch normalization | 0.861 |
-| Smaller CNN | Reduced filter sizes & depth | 0.832 |
-| SGD Optimizer | Replaced Adam with SGD | 0.789 |
+- full configured CNN;
+- no dropout;
+- no batch normalization;
+- reduced-depth CNN;
+- optimizer substitution.
 
----
+## Required protocol
 
-## 🔍 Insights
+Every row in a future ablation table must record:
 
-### ✔ BatchNorm improves feature stability  
-Removing it reduces performance by **4.6%**.
+1. dataset hash and license;
+2. identical train/validation/test split manifest;
+3. preprocessing and augmentation configuration;
+4. fixed seeds and dependency versions;
+5. one changed factor per variant;
+6. training command and Git commit;
+7. model artifact digest;
+8. class support and confusion matrix;
+9. precision, recall, F1 and calibration where appropriate;
+10. repeated runs or confidence intervals when stochastic variation is material.
 
-### ✔ Dropout prevents overfitting  
-F1 dropped by **2.3%** without dropout.
-
-### ✔ Model depth strongly affects generalization  
-A smaller CNN leads to **significant underfitting**.
-
-### ✔ Adam optimizer performs best  
-SGD decreases convergence performance.
-
----
-
-## 🎯 Conclusion
-Every component contributes meaningfully, but **BatchNorm + Adam** contribute the most to model stability and performance.
+Until those artifacts exist, numeric ablation deltas are intentionally omitted.
