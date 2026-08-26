@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-v1.1.0
+  cancel-in-progress: false
+
+env:
+  VERSION: v1.1.0
+  IMAGE: ghcr.io/coreyleath-code/ai-vehicle-safety-classifier
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'release: v1.1.0')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check whether release already exists
+        id: preflight
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "$VERSION already exists; refusing to mutate an existing release."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Authenticate to GitHub Container Registry
+        if: steps.preflight.outputs.publish == 'true'
+        run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build immutable container
+        if: steps.preflight.outputs.publish == 'true'
+        run: |
+          SHORT_SHA="${GITHUB_SHA::12}"
+          docker build \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=${VERSION}" \
+            -t "$IMAGE:$VERSION" \
+            -t "$IMAGE:sha-$SHORT_SHA" \
+            .
+
+      - name: Publish GHCR package
+        if: steps.preflight.outputs.publish == 'true'
+        run: |
+          SHORT_SHA="${GITHUB_SHA::12}"
+          docker push "$IMAGE:$VERSION" | tee push.log
+          docker push "$IMAGE:sha-$SHORT_SHA"
+          DIGEST="$(grep -Eo 'digest: sha256:[0-9a-f]+' push.log | awk '{print $2}' | tail -1)"
+          test -n "$DIGEST"
+          {
+            echo "release=$VERSION"
+            echo "commit=$GITHUB_SHA"
+            echo "image=$IMAGE:$VERSION"
+            echo "immutable_image=$IMAGE:sha-$SHORT_SHA"
+            echo "digest=$DIGEST"
+            echo "workflow_run=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } > release-evidence.txt
+
+      - name: Publish GitHub Release
+        if: steps.preflight.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## AI Vehicle Safety Classifier v1.1.0
+
+          Evidence-hardening release focused on truthful system boundaries, reproducible engineering metrics, deployment validation, and supply-chain packaging.
+
+          ### Verified in repository CI
+          - strict deterministic vehicle-condition API contract
+          - >=90% core branch-coverage gate
+          - reproducible latency/throughput/memory benchmark artifact
+          - Ruff, Bandit, pip-audit, CodeQL, Trivy, and SPDX SBOM checks
+          - non-root container startup and API smoke validation
+          - strict Kubernetes manifest validation
+
+          ### Evidence policy
+          CNN model-quality numbers are intentionally not claimed until a versioned labeled dataset, split definition, trained artifact, and reproducible evaluation output are present.
+
+          ### Package
+          `ghcr.io/coreyleath-code/ai-vehicle-safety-classifier:v1.1.0`
+          EOF
+          gh release create "$VERSION" release-evidence.txt \
+            --target "$GITHUB_SHA" \
+            --title "AI Vehicle Safety Classifier $VERSION" \
+            --notes-file release-notes.md
