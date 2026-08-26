@@ -1,72 +1,49 @@
-# 📄 Model Card — AI Vehicle Safety Classifier
+# Model Card — CNN Research Path
 
-## 1. Model Summary
-A convolutional neural network (CNN) trained to classify vehicle driving conditions into *Safe* and *Unsafe*. Intended for use in driver assistance systems and intelligent vehicle monitoring.
+## Status
 
----
+**Research-only / not release-qualified.** The repository contains CNN training and inference code, but no versioned redistributable labeled dataset and signed trained model artifact are present. The deterministic HTTP service is the currently validated serving path.
 
-## 2. Intended Use
-- Dashcam monitoring  
-- Insurance claim validation  
-- Fleet vehicle safety analysis  
-- Autonomous vehicle pre-processing  
+## Intended research use
 
-Not intended for *real-time* emergency intervention without human oversight.
+The CNN code is intended to explore binary image classification for vehicle/driving-safety research. It must not be represented as a certified driver-assistance, insurance, legal, emergency-intervention, or autonomous-driving system without a separate domain validation program.
 
----
+## Architecture in code
 
-## 3. Architecture Overview
-- Convolutional layers (3 blocks)  
-- Batch normalization  
-- Dropout (0.3)  
-- Dense classifier with softmax  
-- Adam optimizer  
+The repository contains TensorFlow-oriented image preprocessing/model-loading hooks and an offline training/evaluation path under `src/`. Image inference is loaded lazily and is not required by the deterministic service runtime.
 
----
+## Dataset
 
-## 4. Dataset
-- 1,260 total labeled images  
-- Balanced classes  
-- Train/val/test split = 70/15/15  
-- Augmentations: rotation, blur, brightness, motion distortion  
+No immutable dataset manifest is currently available in the repository. Class counts, split ratios, environment distribution, and dataset-derived claims are therefore intentionally unspecified. See `dataset_stats.md` for the evidence required before publication.
 
----
+## Model-quality metrics
 
-## 5. Performance Metrics
-See **metrics.md** for full details.
+**Unavailable.** Accuracy, precision, recall, F1, ROC-AUC, confusion matrix, calibration, subgroup slices, and ablation deltas are not published as verified results because the repository cannot currently regenerate them end to end.
 
-Best F1 Score = **0.907**
+## Risks and limitations
 
-ROC-AUC = **0.958**
+- Unknown behavior outside any future documented training distribution.
+- Safety-domain false negatives and false positives may have asymmetric costs.
+- Single-frame classification cannot capture temporal driving context by itself.
+- Camera, lighting, weather, geography, vehicle interior/exterior, and collection-source shifts may materially change performance.
+- Confidence scores must not be treated as calibrated probabilities without calibration evidence.
+- A model artifact must not be promoted into the service solely because aggregate accuracy looks acceptable.
 
----
+## Promotion criteria
 
-## 6. Ethical Considerations
+Before serving CNN predictions, require:
 
-### Potential Risks
-- Bias if trained only on certain environments (e.g., daytime, clear weather)  
-- May misclassify rare driving scenarios  
-- Cannot replace human judgment in insurance or legal cases  
+1. dataset identity, license, hashes, and immutable split manifest;
+2. duplicate/leakage checks;
+3. fixed seeds and dependency lock;
+4. reproducible training configuration and command;
+5. model artifact digest/signature;
+6. class support, confusion matrix, precision, recall, F1, calibration and relevant subgroup slices;
+7. uncertainty/fail-closed policy;
+8. latency and memory measurements on the actual deployment target;
+9. drift/rollback plan;
+10. review of intended use and excluded use by the appropriate domain stakeholders.
 
-### Mitigation Steps
-- Expand dataset to include diverse lighting + weather  
-- Add uncertainty estimation  
-- Continuous monitoring of false positives  
+## Engineering evidence
 
----
-
-## 7. Limitations
-- Not trained on video sequences — single-frame only  
-- Not robust to night conditions unless supplemented  
-- Limited by dataset size  
-
----
-
-## 8. Reproducibility
-Environment and seeds stored in `reproducibility.md`.
-
----
-
-## 9. Maintainer
-Corey Leath (CoreyLeath-code)  
-GitHub: https://github.com/CoreyLeath-code
+The deterministic API path has reproducible CI, coverage, security, container, Kubernetes, and benchmark evidence documented in `README.md` and `metrics.md`. Those engineering measurements do not substitute for CNN model validation.
