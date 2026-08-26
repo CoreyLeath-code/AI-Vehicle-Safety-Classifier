@@ -1,5 +1,5 @@
 -r requirements-runtime.txt
-bandit==1.8.6
+bandit==1.9.4
 pip-audit==2.10.1
 pytest==8.4.1
 pytest-cov==6.2.1
