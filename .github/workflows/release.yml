@@ -19,7 +19,9 @@ env:
 
 jobs:
   publish:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'release: v1.1.0')
+    # Keep the push path one-time/intentional while retaining manual recovery.
+    # Avoid a colon in this YAML plain scalar; the prior condition was invalid YAML.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'release-v1.1.0')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -39,7 +41,9 @@ jobs:
 
       - name: Authenticate to GitHub Container Registry
         if: steps.preflight.outputs.publish == 'true'
-        run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
       - name: Build immutable container
         if: steps.preflight.outputs.publish == 'true'
