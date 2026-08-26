@@ -1,6 +1,6 @@
 """
 AI Vehicle Safety Classifier — Model Builder
-Author: Corey Leath (Trojan3877)
+Author: Corey Leath (CoreyLeath-code)
 L5/L6 Production-Ready Architecture
 
 This file creates and compiles the CNN model using configuration
