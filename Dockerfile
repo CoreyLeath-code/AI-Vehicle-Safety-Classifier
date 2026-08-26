@@ -5,11 +5,23 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
+
+# Keep the runtime OS patched instead of accepting vulnerable packages from a
+# moving base tag. Trivy blocks HIGH/CRITICAL findings in CI.
+RUN apt-get update \
+    && apt-get install --only-upgrade -y --no-install-recommends \
+       openssl libssl3t64 openssl-provider-legacy \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements-runtime.txt .
 RUN python -m pip install --upgrade \
       "pip>=26.1,<27" "setuptools>=80.9,<81" "wheel>=0.46.2,<0.47" \
       "jaraco.context>=6.1,<7" \
     && python -m pip install -r requirements-runtime.txt \
+    # pip/setuptools/wheel are build/install tooling, not application runtime
+    # dependencies. Removing them also removes their vendored packages and
+    # reduces the final attack surface scanned by Trivy.
+    && python -m pip uninstall -y pip setuptools wheel jaraco.context \
     && groupadd --gid 10001 app \
     && useradd --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 
