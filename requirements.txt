@@ -26,5 +26,5 @@ uvicorn[standard]==0.52.4
 streamlit==1.33.0
 
 # Serialization & Model Export
-joblib==1.4.2
+joblib==1.6.0
 onnxruntime==1.29.0
