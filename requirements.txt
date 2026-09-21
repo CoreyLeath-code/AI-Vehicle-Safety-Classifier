@@ -10,7 +10,7 @@ seaborn==0.13.2
 tensorflow==2.21.0          # GPU-enabled if NVIDIA drivers installed
 
 # Utility Libraries
-tqdm==4.66.2
+tqdm==4.70.0
 pyyaml==6.0.3
 
 # Testing & Code Quality
