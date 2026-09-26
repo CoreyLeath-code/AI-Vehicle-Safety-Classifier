@@ -27,4 +27,4 @@ streamlit==1.63.0
 
 # Serialization & Model Export
 joblib==1.6.0
-onnxruntime==1.29.0
+onnxruntime==1.30.0
