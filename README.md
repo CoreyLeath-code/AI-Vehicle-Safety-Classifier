@@ -1,5 +1,11 @@
 # AI Vehicle Safety Classifier
 
+<!-- portfolio-lifecycle-badges:start -->
+[![Latest release](https://img.shields.io/github/v/release/CoreyLeath-code/AI-Vehicle-Safety-Classifier?display_name=tag&sort=semver)](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/releases/latest)
+[![Lifecycle documentation](https://img.shields.io/badge/lifecycle-documented-2563eb)](#ownership-promotion-and-operational-lifecycle)
+[![Maintainer](https://img.shields.io/badge/maintainer-Corey%20Leath-111827)](https://github.com/CoreyLeath-code)
+<!-- portfolio-lifecycle-badges:end -->
+
 [![CI](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/ci.yml/badge.svg)](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/ci.yml)
 [![Security](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/security.yml/badge.svg)](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/security.yml)
 [![Release](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/release.yml/badge.svg)](https://github.com/CoreyLeath-code/AI-Vehicle-Safety-Classifier/actions/workflows/release.yml)
