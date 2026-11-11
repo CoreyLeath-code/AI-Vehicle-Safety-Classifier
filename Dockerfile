@@ -10,7 +10,7 @@ WORKDIR /app
 # moving base tag. Trivy blocks HIGH/CRITICAL findings in CI.
 RUN apt-get update \
     && apt-get install --only-upgrade -y --no-install-recommends \
-       openssl libssl3t64 openssl-provider-legacy \
+       openssl libssl3t64 openssl-provider-legacy zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-runtime.txt .
